@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import gzip
+from Levenshtein import distance
 
 samples = {
     'AAVS1_DNA':['AAGAAGTTCA','AAVS1_DNA'],
@@ -67,7 +68,7 @@ for indir in indirs:
                     x = samples[i][0]
                     filename = samples[i][1]
 
-                    if index1 == index2 == index3 == x:
+                    if index1 == index2 == index3 and distance(index1, x) < 1:
                         f = open(filename + '_R1.fastq','a')
                         f.write(a1.decode('UTF-8'))
                         f.write(b1.decode('UTF-8'))

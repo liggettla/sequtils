@@ -1,0 +1,15 @@
+#!/bin/bash
+
+for f in *svg
+do
+    inkscape $f --export-pdf=$f.pdf
+
+    # remove svg.pdf suffix
+    # replace with .pdf suffix
+    mv *svg.pdf ${f%svg*}pdf
+done
+
+# combine files
+rm final.pdf
+pdftk fig_1.pdf fig_2.pdf fig_3.pdf *s*pdf cat output final.pdf
+rm *_*pdf

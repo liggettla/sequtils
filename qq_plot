@@ -7,7 +7,7 @@ results = [
 ]
 
 # iterate through multiple GWASs
-pretty('talk')
+pretty('poster')
 for result in results:
     df = pd.read_csv(
         'gs://{}/sumstats/70k_09_01_2021_{}.gz'.format(bucket, result),
@@ -67,7 +67,7 @@ for result in results:
     plt.ylim(0,)
     plt.tick_params(labelbottom=True, bottom=True)
     sns.despine(offset=10, trim=True, bottom=False)
-    pretty('talk')
+    pretty('poster')
     
     #plt.savefig('qq_{}.pdf'.format(result), format="pdf", dpi=300, bbox_inches="tight")
     plt.show()

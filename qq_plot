@@ -1,0 +1,73 @@
+# bucket
+bucket = ''
+
+# import the data
+results = [
+    'my_sumstats',
+]
+
+# iterate through multiple GWASs
+pretty('talk')
+for result in results:
+    df = pd.read_csv(
+        'gs://{}/sumstats/70k_09_01_2021_{}.gz'.format(bucket, result),
+        sep='\t',
+        compression='gzip',
+    )
+
+    # convert pval to -log10
+    df['logp'] = np.log10(df['p.value']) * -1
+    
+    # calculate lambda
+    # For p-values, calculate chi-squared statistic
+    chisq = chi2.ppf(1-df['p.value'],1)
+
+    # Calculate lambda gc
+    lambda_gc = np.median(chisq)/chi2.ppf(0.5,1)
+    
+    # downsample to 1% -log10(p) < 3
+    temp = df[(df['logp'] > 3)]
+    temp = temp.append(df[
+        ~(df['logp'] > 3)
+    ].sample(
+        frac=0.01,
+        replace=False,
+        random_state=1))
+    df = temp
+    
+    # filter out AF <0.01 or <0.001
+    df = df[df['AF_Allele2'] > 0.001]
+
+    # sort pval then create vector of N values evenly spaces from 1 to 1 / N as
+    # expected pval
+    # https://physiology.med.cornell.edu/people/banfelder/qbio/resources_2013/2013_1_Mezey.pdf
+    x = ppoints(df.logp)
+    df = df.sort_values('logp', ascending=True)
+    x = np.log10(x) * -1
+    x.sort()
+    df['logpexp'] = x
+
+    # plot the results
+    sns.regplot(x='logpexp',
+                y='logp',
+                data=df,
+                n_boot=10,
+                y_jitter=.03,
+                marker="o",
+                ci=95,
+                order=1,
+                # color='#81A1C1,
+                color='#5E81AC',
+                )
+
+    plt.title('{} AF > 0.001\nλ = {}'.format(result, round(lambda_gc, 2)))
+    plt.xlabel('$Expected -log_{10}$(P)')
+    plt.ylabel('$Observed -log_{10}$(P)')
+    plt.xlim(0,)
+    plt.ylim(0,)
+    plt.tick_params(labelbottom=True, bottom=True)
+    sns.despine(offset=10, trim=True, bottom=False)
+    pretty('talk')
+    
+    #plt.savefig('qq_{}.pdf'.format(result), format="pdf", dpi=300, bbox_inches="tight")
+    plt.show()

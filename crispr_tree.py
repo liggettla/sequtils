@@ -21,6 +21,7 @@ def readFile(indir, filename):
                 gene, seq = checkMatch(line)
                 if gene:
                     print('{} Match in {}:\n{}'.format(gene, filename, line))
+                    # getEdit(gene, filename, line)
                 count += 1
 
             elif count == 3:
@@ -47,6 +48,8 @@ def checkMatch(line):
         return False, False
 
 # locate any CRISPR edits
+# maybe convert all characters to the same char
+# then distance will just be the difference in length?
 def getEdit():
     pass
     sub = 'GGGCT'
@@ -55,6 +58,10 @@ def getEdit():
     test_start = line.index(sub)
     test = (test_start,test_start+20)
     print(distance(ctrl, test))
+
+# dedup
+def umiCollapse():
+    pass
 
 if __name__ == '__main__':
     indir = '../test'

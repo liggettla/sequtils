@@ -20,8 +20,9 @@ def readFile(indir, filename):
                 line = line.decode("utf-8").strip()
                 gene, seq = checkMatch(line)
                 if gene:
-                    print('{} Match in {}:\n{}'.format(gene, filename, line))
-                    # getEdit(gene, filename, line)
+                    edit, ctrl, test = getEdit(gene, line)
+                    if edit:
+                        print('Match in {}\nCtrl: {}\nTest: {}\nDistance: {}\n'.format(gene, ctrl, test, edit))
                 count += 1
 
             elif count == 3:
@@ -50,14 +51,37 @@ def checkMatch(line):
 # locate any CRISPR edits
 # maybe convert all characters to the same char
 # then distance will just be the difference in length?
-def getEdit():
-    pass
-    sub = 'GGGCT'
-    ctrl_start = aavs1.index(sub)
-    ctrl = (ctrl_start,ctrl_start+20)
-    test_start = line.index(sub)
-    test = (test_start,test_start+20)
-    print(distance(ctrl, test))
+def getEdit(gene, line):
+    # starts 27bp from center of edits
+    starts = {'AAVS1':'GATGGGG',
+            'CHEK2':'CTGTATT'
+            }
+    ends = {'AAVS1':'TGGAGGG',
+            'CHEK2':'TGTATGC'
+            }
+    seqs = {
+            'AAVS1':aavs1,
+            'CHEK2':chek2
+            }
+
+    start = starts[gene]
+    end = ends[gene]
+    seq = seqs[gene]
+
+    if start in line and end in line:
+        ctrl = seq[
+                seq.index(start):
+                seq.index(end)
+                ]
+
+        test = line[
+                line.index(start):
+                line.index(end)
+                ]
+
+        return str(distance(ctrl, test)), ctrl, test
+    else:
+        return (False, False, False)
 
 # dedup
 def umiCollapse():

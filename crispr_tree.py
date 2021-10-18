@@ -4,10 +4,94 @@ from multiprocessing import Process
 import os
 import gzip
 from Levenshtein import distance
+from collections import defaultdict
+
 aavs1 = 'GTTAGACCCAATATCAGGAGACTAGGAAGGAGGAGGCCTAAGGATGGGGCTTTTCTGTCACCAATCCTGTCCCTAGTGGCCCCACTGTGGGGTGGAGGGGACAGATAAAAGTACCCAGAACCAGAGCC'
 chek2 = 'CTTTATTTCTGCTTAGTGACAGTGCAATTTCAGAATTGTTATTCAAAGGACGGCGTTTTCCTTTCCCTACAAGCTCTGTATTTACAAAGGTTCCATTGCCACTGTGATCTTCTATGTATGCAATGTAAGAGTTTTTAGGACCCACTTCC'
+edits = defaultdict(defaultdict)
+counts = defaultdict(defaultdict)
+
+def annotate(filename):
+    # filenames and sample numbers
+    samples = {
+            'TAAGGCGA_GTACGGAT':1,
+            'CGTACTAG_CTGTGAAC':2,
+            'AGGCAGAA_TCGTAGCA':3,
+            'TCCTGAGC_GTGAGTCT':4,
+
+            'GGACTCCT_GCTTGGAT':5,
+            'TAGGCATG_TGAATGCG':6,
+            'CTCTCTAC_CGTGTCAT':7,
+            'CAGAGAGG_CCGTAGTT':8,
+
+            'TAAGGCGA_TAAGCCTC':9,
+            'CGTACTAG_ACGAAGTC':10,
+            'AGGCAGAA_ACAACGAC':11,
+            'TCCTGAGC_GAAGCAGA':12,
+
+            'GGACTCCT_AAGTCCTC':13,
+            'TAGGCATG_ATCGAGGA':14,
+            'CTCTCTAC_TCCTGCTT':15,
+            'CAGAGAGG_GCCTAGAA':16,
+
+            'TAAGGCGA_AGTTACGC':17,
+            'CGTACTAG_TGGATCAC':18,
+            'AGGCAGAA_AACTGCAC':19,
+            'TCCTGAGC_TTACGGTC':20,
+
+            'GGACTCCT_GACGATCA':21,
+            'TAGGCATG_CCTTGAAC':22,
+            'CTCTCTAC_ACGAATGG':23,
+            'CAGAGAGG_GGCATACT':24,
+        }
+
+    # requires python 3.9
+    tag = filename.removesuffix('_R1.fastq.gz')
+    sample = samples[tag]
+    edit = ''
+    timepoint = ''
+    replicate = ''
+
+    if sample in [1,2,3,4]:
+        edit = 'AAVS1'
+        timepoint = 1
+    if sample in [5,6,7,8]:
+        edit = 'CHEK2'
+        timepoint = 1
+    if sample in [9,10,11,12]:
+        edit = 'AAVS1'
+        timepoint = 2
+    if sample in [13,14,15,16]:
+        edit = 'CHEK2'
+        timepoint = 2
+    if sample in [17,18,19,20]:
+        edit = 'AAVS1'
+        timepoint = 3
+    if sample in [21,22,23,24]:
+        edit = 'CHEK2'
+        timepoint = 3
+
+    if sample in [1,9,17]:
+        replicate = 'A'
+    if sample in [5,13,21]:
+        replicate = 'A'
+    if sample in [2,10,18]:
+        replicate = 'B'
+    if sample in [6,14,22]:
+        replicate = 'B'
+    if sample in [3,11,19]:
+        replicate = 'C'
+    if sample in [7,15,23]:
+        replicate = 'C'
+    if sample in [4,12,20]:
+        replicate = 'D'
+    if sample in [8,16,24]:
+        replicate = 'D'
+
+    return edit, timepoint, replicate
 
 def readFile(indir, filename):
+
     with gzip.open('{}/{}'.format(indir, filename), 'r') as f:
         count = 1
         for line in f:
@@ -22,7 +106,8 @@ def readFile(indir, filename):
                 if gene:
                     edit, ctrl, test = getEdit(gene, line)
                     if edit:
-                        print('Match in {}\nCtrl: {}\nTest: {}\nDistance: {}\n'.format(gene, ctrl, test, edit))
+                        # print('Match in {}\nFile: {}\nCtrl: {}\nTest: {}\nDistance: {}\n'.format(gene, filename, ctrl, test, edit))
+                        quantifyEdits(filename, edit)
                 count += 1
 
             elif count == 3:
@@ -82,6 +167,10 @@ def getEdit(gene, line):
         return str(distance(ctrl, test)), ctrl, test
     else:
         return (False, False, False)
+
+def quantifyEdits(filename, deletion):
+    edit, timepoint, replicate = annotate(filename)
+    print(edit, timepoint, replicate)
 
 # dedup
 def umiCollapse():

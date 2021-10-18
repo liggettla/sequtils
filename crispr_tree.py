@@ -5,6 +5,7 @@ import os
 import gzip
 from Levenshtein import distance
 from collections import defaultdict
+import pandas as pd
 
 aavs1 = 'GTTAGACCCAATATCAGGAGACTAGGAAGGAGGAGGCCTAAGGATGGGGCTTTTCTGTCACCAATCCTGTCCCTAGTGGCCCCACTGTGGGGTGGAGGGGACAGATAAAAGTACCCAGAACCAGAGCC'
 chek2 = 'CTTTATTTCTGCTTAGTGACAGTGCAATTTCAGAATTGTTATTCAAAGGACGGCGTTTTCCTTTCCCTACAAGCTCTGTATTTACAAAGGTTCCATTGCCACTGTGATCTTCTATGTATGCAATGTAAGAGTTTTTAGGACCCACTTCC'
@@ -107,7 +108,7 @@ def readFile(indir, filename):
                     edit, ctrl, test = getEdit(gene, line)
                     if edit:
                         # print('Match in {}\nFile: {}\nCtrl: {}\nTest: {}\nDistance: {}\n'.format(gene, filename, ctrl, test, edit))
-                        quantifyEdits(filename, edit)
+                        quantifyEdits(filename, edit, test)
                 count += 1
 
             elif count == 3:
@@ -168,9 +169,9 @@ def getEdit(gene, line):
     else:
         return (False, False, False)
 
-def quantifyEdits(filename, deletion):
+def quantifyEdits(filename, deletion, test):
     edit, timepoint, replicate = annotate(filename)
-    print(edit, timepoint, replicate)
+    print(edit, timepoint, replicate, deletion, test)
 
 # dedup
 def umiCollapse():

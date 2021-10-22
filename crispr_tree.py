@@ -9,8 +9,7 @@ import pandas as pd
 
 aavs1 = 'GTTAGACCCAATATCAGGAGACTAGGAAGGAGGAGGCCTAAGGATGGGGCTTTTCTGTCACCAATCCTGTCCCTAGTGGCCCCACTGTGGGGTGGAGGGGACAGATAAAAGTACCCAGAACCAGAGCC'
 chek2 = 'CTTTATTTCTGCTTAGTGACAGTGCAATTTCAGAATTGTTATTCAAAGGACGGCGTTTTCCTTTCCCTACAAGCTCTGTATTTACAAAGGTTCCATTGCCACTGTGATCTTCTATGTATGCAATGTAAGAGTTTTTAGGACCCACTTCC'
-edits = defaultdict(defaultdict)
-counts = defaultdict(defaultdict)
+all_edits = defaultdict(lambda: defaultdict(int))
 
 def annotate(filename):
     # filenames and sample numbers
@@ -107,7 +106,7 @@ def readFile(indir, filename):
                 if gene:
                     edit, ctrl, test = getEdit(gene, line)
                     if edit:
-                        # print('Match in {}\nFile: {}\nCtrl: {}\nTest: {}\nDistance: {}\n'.format(gene, filename, ctrl, test, edit))
+                        # will edit the gobal dictionary
                         quantifyEdits(filename, edit, test)
                 count += 1
 
@@ -169,9 +168,17 @@ def getEdit(gene, line):
     else:
         return (False, False, False)
 
-def quantifyEdits(filename, deletion, test):
+def quantifyEdits(filename, deletion, edited_sequence):
+    # get actual sample numbers and other info
     edit, timepoint, replicate = annotate(filename)
-    print(edit, timepoint, replicate, deletion, test)
+
+    # stores the sample information
+    sample_id = '{}_{}_{}'.format(edit, timepoint, replicate)
+    # stores the edited sequence and the number of edits
+    deletion_id = '{}_{}'.format(deletion, edited_sequence)
+
+    all_edits[sample_id][deletion_id] += 1
+    print(pd.DataFrame(all_edits))
 
 # dedup
 def umiCollapse():

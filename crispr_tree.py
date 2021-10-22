@@ -120,8 +120,10 @@ def readFile(indir, filename, q):
     # put final DataFrame into queue that is
     # shared across processes so it can be
     # combined at the end
-    # q.put(all_edits)
-    q.put(5)
+
+    # might need to put the all_edits dictionary in this method instead of making it global
+    q.put(pd.DataFrame(all_edits))
+    # q.put(5)
 
 # check if line contains AAVS1 or CHEK2 sequence
 def checkMatch(line):
@@ -196,14 +198,18 @@ if __name__ == '__main__':
     q = Queue()
     df_combined = pd.DataFrame()
 
+    # get a count for the queue
+    queue_count = 0
     # start a process for each input fastq
     for filename in os.listdir(indir):
         if filename.endswith('R1.fastq.gz'):
+            queue_count += 1
             p = Process(target=readFile, args=(indir, filename, q))
             p.start()
-            # df_combined = df_combined.append(q.get())
 
-    print(q.get())
+    # df_combined = df_combined.append(q.get())
+    for i in range(queue_count):
+        print(q.get())
 
     # df_combined.to_csv('all_edits.txt')
     p.join()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from multiprocessing import Process
+from multiprocessing import Process, Lock
 import os
 import gzip
 from Levenshtein import distance
@@ -90,7 +90,7 @@ def annotate(filename):
 
     return edit, timepoint, replicate
 
-def readFile(indir, filename):
+def readFile(indir, filename, lock):
 
     with gzip.open('{}/{}'.format(indir, filename), 'r') as f:
         count = 1
@@ -116,6 +116,15 @@ def readFile(indir, filename):
             # reset counting
             elif count == 4:
                 count = 1
+
+    # check out the output file
+    lock.acquire()
+    try:
+        # write out all of the data in append mode so data from other processes
+        # is not overwritten
+        pd.DataFrame(all_edits).to_csv('all_edits.txt', mode='a', index=True)
+    finally:
+        lock.release()
 
 # check if line contains AAVS1 or CHEK2 sequence
 def checkMatch(line):
@@ -186,8 +195,10 @@ def umiCollapse():
 
 if __name__ == '__main__':
     indir = '../test'
+
+    lock = Lock()
     for filename in os.listdir(indir):
         if filename.endswith('R1.fastq.gz'):
-            p = Process(target=readFile, args=(indir, filename))
+            p = Process(target=readFile, args=(indir, filename, lock))
             p.start()
     p.join()

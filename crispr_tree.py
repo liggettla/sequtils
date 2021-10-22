@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Lock, Queue
 import os
 import gzip
 from Levenshtein import distance
@@ -90,7 +90,7 @@ def annotate(filename):
 
     return edit, timepoint, replicate
 
-def readFile(indir, filename, lock):
+def readFile(indir, filename, q):
 
     with gzip.open('{}/{}'.format(indir, filename), 'r') as f:
         count = 1
@@ -117,14 +117,11 @@ def readFile(indir, filename, lock):
             elif count == 4:
                 count = 1
 
-    # check out the output file
-    lock.acquire()
-    try:
-        # write out all of the data in append mode so data from other processes
-        # is not overwritten
-        pd.DataFrame(all_edits).to_csv('all_edits.txt', mode='a', index=True)
-    finally:
-        lock.release()
+    # put final DataFrame into queue that is
+    # shared across processes so it can be
+    # combined at the end
+    # q.put(all_edits)
+    q.put(5)
 
 # check if line contains AAVS1 or CHEK2 sequence
 def checkMatch(line):
@@ -187,7 +184,6 @@ def quantifyEdits(filename, deletion, edited_sequence):
     deletion_id = '{}_{}'.format(deletion, edited_sequence)
 
     all_edits[sample_id][deletion_id] += 1
-    pd.DataFrame(all_edits).to_csv('all_edits.txt', index=True)
 
 # dedup
 def umiCollapse():
@@ -196,9 +192,18 @@ def umiCollapse():
 if __name__ == '__main__':
     indir = '../test'
 
-    lock = Lock()
+    # just put each DataFrame into the queue and combine at the end
+    q = Queue()
+    df_combined = pd.DataFrame()
+
+    # start a process for each input fastq
     for filename in os.listdir(indir):
         if filename.endswith('R1.fastq.gz'):
-            p = Process(target=readFile, args=(indir, filename, lock))
+            p = Process(target=readFile, args=(indir, filename, q))
             p.start()
+            # df_combined = df_combined.append(q.get())
+
+    print(q.get())
+
+    # df_combined.to_csv('all_edits.txt')
     p.join()

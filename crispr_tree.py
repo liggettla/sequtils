@@ -178,7 +178,7 @@ def quantifyEdits(filename, deletion, edited_sequence):
     deletion_id = '{}_{}'.format(deletion, edited_sequence)
 
     all_edits[sample_id][deletion_id] += 1
-    print(pd.DataFrame(all_edits))
+    pd.DataFrame(all_edits).to_csv('all_edits.txt', index=True)
 
 # dedup
 def umiCollapse():

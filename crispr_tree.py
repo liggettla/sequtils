@@ -192,7 +192,8 @@ def umiCollapse():
     pass
 
 if __name__ == '__main__':
-    indir = '../test'
+    # indir = '../test'
+    indir = '/Users/lliggett/Downloads/merged/all'
 
     # just put each DataFrame into the queue and combine at the end
     q = Queue()

@@ -198,7 +198,7 @@ if __name__ == '__main__':
     q = Queue()
     df_combined = pd.DataFrame()
 
-    # get a count for the queue
+    # get a count for the size of the queue
     queue_count = 0
     # start a process for each input fastq
     for filename in os.listdir(indir):
@@ -209,7 +209,9 @@ if __name__ == '__main__':
 
     # df_combined = df_combined.append(q.get())
     for i in range(queue_count):
-        print(q.get())
+        temp = q.get()
+        temp = temp.reset_index().rename(columns={'index':'Seq'})
+        df_combined = df_combined.append(temp, ignore_index=True)
 
-    # df_combined.to_csv('all_edits.txt')
+    df_combined.to_csv('all_edits.txt')
     p.join()
